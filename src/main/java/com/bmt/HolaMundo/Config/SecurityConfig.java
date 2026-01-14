@@ -15,7 +15,9 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(auth -> auth
                     // Permitir acceso público a la ruta raíz
-                    .requestMatchers("/").permitAll()
+                    .requestMatchers("/",
+                    				"/form"
+                    				).permitAll()
                     // Todas las demás rutas también son públicas
                     .anyRequest().permitAll()
                 )
