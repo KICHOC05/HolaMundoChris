@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error del Sistema</title>
+</head>
+<!-- Breadcrumbs que muestran la ruta actual del HTML -->
+<div style="padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; margin-bottom: 15px; font-size: 14px;">
+    <strong>Ubicación:</strong> 
+    <span>Inicio</span>
+    <span style="color: #666;"> &gt; error</span>
+    <span style="color: #666;"> &gt; generic.html</span>
+</div>
+<body>
+    <h1>Error del Sistema</h1>
+    <h2>Ocurrió un problema</h2>
+    
+    <div th:if="${errorMessage}">
+        <p><strong>Error:</strong> <span th:text="${errorMessage}"></span></p>
+    </div>
+    
+    <div>
+        <a href="/">Ir al Inicio</a> | 
+        <button onclick="history.back()">Volver Atrás</button>
+    </div>
+    
+    <hr>
+    
+    <div th:if="${exception}">
+        <h3>Detalles para desarrollo:</h3>
+        <pre th:text="${exception.message}"></pre>
+    </div>
+    
+    <p><small>Por favor, intente nuevamente o contacte al administrador</small></p>
+</body>
+</html>

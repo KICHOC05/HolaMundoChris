@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -14,17 +16,37 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(auth -> auth
-                    // Permitir acceso público a la ruta raíz
-                    .requestMatchers("/",
-                    				"/form"
-                    				).permitAll()
-                    // Todas las demás rutas también son públicas
+                    // Permitir acceso público a todas las rutas
                     .anyRequest().permitAll()
                 )
-                // Deshabilitar el formulario de login por defecto
+                
+                // Configurar CSRF manualmente
+                .csrf(csrf -> csrf
+                    .csrfTokenRepository(csrfTokenRepository())
+                    // Permitir solicitudes GET sin CSRF
+                    .ignoringRequestMatchers(
+                        "/api/files/**",    // Excluir rutas de API de archivos
+                        "/h2-console/**"    // Excluir H2 Console
+                    )
+                )
+                
+                // Configurar para H2 Console
+                .headers(headers -> headers
+                    .frameOptions(frame -> frame.disable())
+                )
+                
+                // Deshabilitar formularios predeterminados
                 .formLogin(form -> form.disable())
-                // Deshabilitar el logout por defecto
                 .logout(logout -> logout.disable())
+                
                 .build();
+    }
+    
+    // Configurar el repositorio de tokens CSRF
+    private CsrfTokenRepository csrfTokenRepository() {
+        HttpSessionCsrfTokenRepository repository = new HttpSessionCsrfTokenRepository();
+        repository.setHeaderName("X-CSRF-TOKEN");
+        repository.setParameterName("_csrf");
+        return repository;
     }
 }
