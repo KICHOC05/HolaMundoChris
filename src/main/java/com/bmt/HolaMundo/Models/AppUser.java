@@ -45,13 +45,10 @@ public class AppUser {
     @Size(max = 100, message = "Máximo 100 caracteres")
     private String direccion;
 
-    // 🔐 Contraseña segura - MISMAS VALIDACIONES QUE EN DTO
+    // 🔐 Contraseña - SIN @Pattern aquí (solo validaciones básicas)
     @NotBlank(message = "Contraseña es obligatoria")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
-    @Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&.#_-])[A-Za-z\\d@$!%*?&.#_-]+$",
-        message = "La contraseña debe contener al menos una mayúscula, una minúscula, un número y un carácter especial (@$!%*?&.#_-)"
-    )
+    // SE ELIMINA @Pattern de aquí
     private String contraseña;
 
     @NotBlank(message = "El rol es obligatorio")

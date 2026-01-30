@@ -38,7 +38,7 @@ public class RegisterDto {
     @Size(max = 100, message = "La dirección no puede exceder los 100 caracteres")
     private String direccion;
 
-    // 🔐 Contraseña - MISMA VALIDACIÓN QUE EN ENTITY
+    // 🔐 Contraseña - VALIDACIÓN COMPLETA SOLO EN DTO
     @NotBlank(message = "Contraseña es obligatoria")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     @Pattern(

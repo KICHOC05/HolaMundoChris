@@ -5,6 +5,7 @@ import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -49,7 +50,7 @@ public class AccountController {
     @PostMapping("/register")
     public String register(
             Model model,
-            @Valid @ModelAttribute("registerDto") RegisterDto registerDto, // Añadido @Valid
+            @Valid @ModelAttribute("registerDto") RegisterDto registerDto,
             BindingResult result,
             @RequestParam(name = "g-recaptcha-response", required = false) String captchaResponse
     ) {
@@ -71,14 +72,14 @@ public class AccountController {
             model.addAttribute("captchaError", captchaError);
         }
         
-        // 2. Si hay errores de validación automática o reCAPTCHA, mostrar formulario
+        // 2. Si hay errores de validación automática o reCAPTCHA
         if (result.hasErrors() || captchaError != null) {
             model.addAttribute("success", false);
             model.addAttribute("siteKey", recaptchaService.getSiteKey());
             return "register";
         }
         
-        // 3. Validar si el email ya existe (validación adicional)
+        // 3. Validar si el email ya existe
         AppUser existingUser = repo.findByEmail(registerDto.getEmail());
         if (existingUser != null) {
             result.addError(new FieldError("registerDto", "email", 
@@ -106,8 +107,11 @@ public class AccountController {
             
             newUser.setDireccion(registerDto.getDireccion());
             newUser.setFechaNacimiento(registerDto.getFechaNacimiento());
-            newUser.setRol("CLIENT"); // Establecer rol obligatorio
-            newUser.setContraseña(encoder.encode(registerDto.getContraseña()));
+            newUser.setRol("CLIENT");
+            
+            // Codificar la contraseña ANTES de asignarla
+            String encodedPassword = encoder.encode(registerDto.getContraseña());
+            newUser.setContraseña(encodedPassword);
 
             repo.save(newUser);
 
@@ -116,13 +120,45 @@ public class AccountController {
             model.addAttribute("success", true);
             model.addAttribute("siteKey", recaptchaService.getSiteKey());
 
+        } catch (jakarta.validation.ConstraintViolationException ex) {
+            // Manejar errores de validación de JPA/Hibernate
+            System.err.println("Error de validación JPA: " + ex.getMessage());
+            
+            // Extraer mensajes de error específicos
+            StringBuilder errorMessages = new StringBuilder();
+            ex.getConstraintViolations().forEach(violation -> {
+                errorMessages.append(violation.getMessage()).append(" ");
+            });
+            
+            result.addError(new FieldError("registerDto", "nombre", 
+                "Error en los datos: " + errorMessages.toString()));
+            model.addAttribute("success", false);
+            model.addAttribute("siteKey", recaptchaService.getSiteKey());
+            
+        } catch (DataIntegrityViolationException ex) {
+            // Manejar errores de integridad de datos (duplicados, etc.)
+            System.err.println("Error de integridad de datos: " + ex.getMessage());
+            
+            if (ex.getMessage().contains("email") || ex.getMessage().contains("EMAIL") || 
+                ex.getMessage().contains("Email") || ex.getRootCause().getMessage().contains("Duplicate")) {
+                result.addError(new FieldError("registerDto", "email", 
+                    "El correo electrónico ya está registrado"));
+            } else {
+                result.addError(new FieldError("registerDto", "nombre", 
+                    "Error de base de datos. Por favor, verifique los datos."));
+            }
+            
+            model.addAttribute("success", false);
+            model.addAttribute("siteKey", recaptchaService.getSiteKey());
+            
         } catch (Exception ex) {
-            // Log del error para depuración
+            // Manejar cualquier otro error
             ex.printStackTrace();
             System.err.println("Error al registrar usuario: " + ex.getMessage());
             
+            // Mensaje genérico para el usuario
             result.addError(new FieldError("registerDto", "nombre", 
-                "Error al registrar usuario. Por favor, intente nuevamente. Error: " + ex.getMessage()));
+                "Error al registrar usuario. Por favor, intente nuevamente."));
             model.addAttribute("success", false);
             model.addAttribute("siteKey", recaptchaService.getSiteKey());
         }
@@ -142,7 +178,6 @@ public class AccountController {
                     if (text != null && !text.trim().isEmpty()) {
                         Date date = dateFormat.parse(text);
                         
-                        // Validar que no sea fecha futura
                         if (date.after(new Date())) {
                             throw new IllegalArgumentException("La fecha de nacimiento debe ser en el pasado");
                         }

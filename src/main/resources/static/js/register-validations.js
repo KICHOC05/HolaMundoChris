@@ -1,364 +1,276 @@
-/**
- * register-validations.js
- * Manejo de validaciones en tiempo real y botones de mostrar/ocultar contraseña
- */
+// register-validations.js
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar funcionalidades
-    initPasswordToggle();
-    initRealTimeValidations();
-    initFormValidation();
+    initValidations();
 });
 
-/**
- * Inicializa los botones de mostrar/ocultar contraseña
- */
-function initPasswordToggle() {
-    const toggleButtons = document.querySelectorAll('.toggle-password');
-    
-    toggleButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const targetId = this.getAttribute('data-target');
-            const passwordInput = document.getElementById(targetId);
-            const icon = this.querySelector('i');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.className = 'bi bi-eye-slash';
-                this.setAttribute('title', 'Ocultar contraseña');
-            } else {
-                passwordInput.type = 'password';
-                icon.className = 'bi bi-eye';
-                this.setAttribute('title', 'Mostrar contraseña');
-            }
-        });
-    });
-}
-
-/**
- * Inicializa las validaciones en tiempo real
- */
-function initRealTimeValidations() {
-    const form = document.getElementById('registerForm');
-    if (!form) return;
-    
-    // Validación de nombre (solo letras y espacios)
-    const nombreInput = document.getElementById('nombre');
-    if (nombreInput) {
-        nombreInput.addEventListener('input', function() {
-            validateNombre(this);
-        });
-        nombreInput.addEventListener('blur', function() {
-            validateNombre(this);
-        });
-    }
-    
-    // Validación de apellido (solo letras y espacios)
-    const apellidoInput = document.getElementById('apellido');
-    if (apellidoInput) {
-        apellidoInput.addEventListener('input', function() {
-            validateApellido(this);
-        });
-        apellidoInput.addEventListener('blur', function() {
-            validateApellido(this);
-        });
-    }
-    
-    // Validación de email
-    const emailInput = document.getElementById('email');
-    if (emailInput) {
-        emailInput.addEventListener('input', function() {
-            validateEmail(this);
-        });
-        emailInput.addEventListener('blur', function() {
-            validateEmail(this);
-        });
-    }
-    
-    // Validación de teléfono (solo números, opcional)
-    const telefonoInput = document.getElementById('telefono');
-    if (telefonoInput) {
-        telefonoInput.addEventListener('input', function() {
-            validateTelefono(this);
-        });
-        telefonoInput.addEventListener('blur', function() {
-            validateTelefono(this);
-        });
-    }
-    
-    // Validación de contraseña en tiempo real
-    const passwordInput = document.getElementById('contraseña');
-    if (passwordInput) {
-        passwordInput.addEventListener('input', function() {
-            validatePassword(this);
-            validatePasswordMatch();
-        });
-        passwordInput.addEventListener('blur', function() {
-            validatePassword(this);
-            validatePasswordMatch();
-        });
-    }
-    
-    // Validación de confirmación de contraseña
-    const confirmPasswordInput = document.getElementById('confirmarContraseña');
-    if (confirmPasswordInput) {
-        confirmPasswordInput.addEventListener('input', validatePasswordMatch);
-        confirmPasswordInput.addEventListener('blur', validatePasswordMatch);
-    }
-    
-    // Validación de fecha de nacimiento
+function initValidations() {
+    // Configurar fecha máxima (hoy) y mínima (113 años atrás)
     const fechaInput = document.getElementById('fechaNacimiento');
     if (fechaInput) {
-        fechaInput.addEventListener('change', function() {
-            validateFechaNacimiento(this);
-        });
-        fechaInput.addEventListener('blur', function() {
-            validateFechaNacimiento(this);
-        });
+        const hoy = new Date();
+        const maxDate = new Date(hoy.getFullYear() - 13, hoy.getMonth(), hoy.getDate());
+        const minDate = new Date(hoy.getFullYear() - 113, hoy.getMonth(), hoy.getDate());
+        
+        fechaInput.max = maxDate.toISOString().split('T')[0];
+        fechaInput.min = minDate.toISOString().split('T')[0];
+        
+        fechaInput.addEventListener('change', validarFechaNacimiento);
+    }
+    
+    // Configurar eventos para todos los campos
+    setupFieldValidation('nombre', validarNombre);
+    setupFieldValidation('apellido', validarApellido);
+    setupFieldValidation('email', validarEmail);
+    setupFieldValidation('telefono', validarTelefono);
+    setupFieldValidation('contraseña', validarContraseña);
+    
+    // Validación especial para confirmación de contraseña
+    const confirmPasswordInput = document.getElementById('confirmarContraseña');
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', validarCoincidenciaContraseña);
+        confirmPasswordInput.addEventListener('blur', validarCoincidenciaContraseña);
+    }
+    
+    // Configurar validación del formulario completo
+    const form = document.getElementById('registerForm');
+    if (form) {
+        form.addEventListener('submit', validarFormularioCompleto);
     }
 }
 
-/**
- * Valida el campo nombre
- */
-function validateNombre(input) {
+function setupFieldValidation(fieldId, validationFunction) {
+    const input = document.getElementById(fieldId);
+    if (input) {
+        input.addEventListener('input', validationFunction);
+        input.addEventListener('blur', validationFunction);
+    }
+}
+
+// Funciones de validación individuales
+function validarNombre() {
+    const input = document.getElementById('nombre');
     const value = input.value.trim();
     const regex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/;
     
     if (value === '') {
-        showError(input, 'El nombre es obligatorio');
+        mostrarError(input, 'El nombre es obligatorio');
         return false;
     } else if (value.length > 50) {
-        showError(input, 'Máximo 50 caracteres');
+        mostrarError(input, 'Máximo 50 caracteres');
         return false;
     } else if (!regex.test(value)) {
-        showError(input, 'No puede contener números ni caracteres especiales');
+        mostrarError(input, 'Solo letras y espacios permitidos');
         return false;
     } else {
-        clearError(input);
+        limpiarError(input);
         return true;
     }
 }
 
-/**
- * Valida el campo apellido
- */
-function validateApellido(input) {
+function validarApellido() {
+    const input = document.getElementById('apellido');
     const value = input.value.trim();
     const regex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/;
     
     if (value === '') {
-        showError(input, 'El apellido es obligatorio');
+        mostrarError(input, 'El apellido es obligatorio');
         return false;
     } else if (value.length > 50) {
-        showError(input, 'Máximo 50 caracteres');
+        mostrarError(input, 'Máximo 50 caracteres');
         return false;
     } else if (!regex.test(value)) {
-        showError(input, 'No puede contener números ni caracteres especiales');
+        mostrarError(input, 'Solo letras y espacios permitidos');
         return false;
     } else {
-        clearError(input);
+        limpiarError(input);
         return true;
     }
 }
 
-/**
- * Valida el campo email
- */
-function validateEmail(input) {
+function validarEmail() {
+    const input = document.getElementById('email');
     const value = input.value.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (value === '') {
-        showError(input, 'El email es obligatorio');
+        mostrarError(input, 'El email es obligatorio');
         return false;
     } else if (value.length > 100) {
-        showError(input, 'Máximo 100 caracteres');
+        mostrarError(input, 'Máximo 100 caracteres');
         return false;
     } else if (!emailRegex.test(value)) {
-        showError(input, 'Debe ser un email válido');
+        mostrarError(input, 'Formato de email inválido');
         return false;
     } else {
-        clearError(input);
+        limpiarError(input);
         return true;
     }
 }
 
-/**
- * Valida el campo teléfono
- */
-function validateTelefono(input) {
+function validarTelefono() {
+    const input = document.getElementById('telefono');
     const value = input.value.trim();
     const regex = /^$|^[0-9]{7,20}$/;
     
     if (value !== '' && !regex.test(value)) {
-        showError(input, 'Debe contener solo números (7 a 20 dígitos) o estar vacío');
+        mostrarError(input, 'Solo números (7-20 dígitos) o vacío');
         return false;
     } else {
-        clearError(input);
+        limpiarError(input);
         return true;
     }
 }
 
-/**
- * Valida la contraseña
- */
-function validatePassword(input) {
+function validarFechaNacimiento() {
+    const input = document.getElementById('fechaNacimiento');
     const value = input.value;
     
     if (value === '') {
-        showError(input, 'La contraseña es obligatoria');
-        return false;
-    } else if (value.length < 8) {
-        showError(input, 'Debe tener al menos 8 caracteres');
-        return false;
-    } else {
-        // Validar complejidad de contraseña
-        const hasLowercase = /[a-z]/.test(value);
-        const hasUppercase = /[A-Z]/.test(value);
-        const hasNumber = /\d/.test(value);
-        const hasSpecial = /[@$!%*?&.#_-]/.test(value);
-        
-        if (!hasLowercase || !hasUppercase || !hasNumber || !hasSpecial) {
-            showError(input, 'Debe contener mayúscula, minúscula, número y carácter especial (@$!%*?&.#_-)');
-            return false;
-        } else {
-            clearError(input);
-            return true;
-        }
-    }
-}
-
-/**
- * Valida que las contraseñas coincidan
- */
-function validatePasswordMatch() {
-    const passwordInput = document.getElementById('contraseña');
-    const confirmInput = document.getElementById('confirmarContraseña');
-    
-    if (!passwordInput || !confirmInput) return;
-    
-    const password = passwordInput.value;
-    const confirm = confirmInput.value;
-    
-    if (confirm === '') {
-        showError(confirmInput, 'Debe confirmar la contraseña');
-        return false;
-    } else if (password !== confirm) {
-        showError(confirmInput, 'Las contraseñas no coinciden');
-        return false;
-    } else {
-        clearError(confirmInput);
-        return true;
-    }
-}
-
-/**
- * Valida la fecha de nacimiento
- */
-function validateFechaNacimiento(input) {
-    const value = input.value;
-    
-    if (value === '') {
-        showError(input, 'La fecha de nacimiento es obligatoria');
+        mostrarError(input, 'La fecha de nacimiento es obligatoria');
         return false;
     }
     
     const fechaNacimiento = new Date(value);
     const hoy = new Date();
+    const edadMinima = new Date(hoy.getFullYear() - 13, hoy.getMonth(), hoy.getDate());
+    const edadMaxima = new Date(hoy.getFullYear() - 113, hoy.getMonth(), hoy.getDate());
     
     if (fechaNacimiento > hoy) {
-        showError(input, 'La fecha debe ser en el pasado');
+        mostrarError(input, 'La fecha no puede ser en el futuro');
+        return false;
+    } else if (fechaNacimiento > edadMinima) {
+        mostrarError(input, 'Debes tener al menos 13 años');
+        return false;
+    } else if (fechaNacimiento < edadMaxima) {
+        mostrarError(input, 'Edad no válida (máximo 113 años)');
         return false;
     } else {
-        clearError(input);
+        limpiarError(input);
         return true;
     }
 }
 
-/**
- * Muestra un error para un campo de entrada
- */
-function showError(input, message) {
-    clearError(input);
+function validarContraseña() {
+    const input = document.getElementById('contraseña');
+    const value = input.value;
+    
+    if (value === '') {
+        mostrarError(input, 'La contraseña es obligatoria');
+        return false;
+    } else if (value.length < 8) {
+        mostrarError(input, 'Mínimo 8 caracteres');
+        return false;
+    }
+    
+    // Validar complejidad
+    const tieneMinuscula = /[a-z]/.test(value);
+    const tieneMayuscula = /[A-Z]/.test(value);
+    const tieneNumero = /\d/.test(value);
+    const tieneEspecial = /[@$!%*?&.#_-]/.test(value);
+    
+    if (!tieneMinuscula || !tieneMayuscula || !tieneNumero || !tieneEspecial) {
+        mostrarError(input, 'Debe incluir mayúscula, minúscula, número y carácter especial (@$!%*?&.#_-)');
+        return false;
+    } else {
+        limpiarError(input);
+        return true;
+    }
+}
+
+function validarCoincidenciaContraseña() {
+    const password = document.getElementById('contraseña').value;
+    const confirmInput = document.getElementById('confirmarContraseña');
+    const confirmValue = confirmInput.value;
+    
+    if (confirmValue === '') {
+        mostrarError(confirmInput, 'Confirma tu contraseña');
+        return false;
+    } else if (password !== confirmValue) {
+        mostrarError(confirmInput, 'Las contraseñas no coinciden');
+        return false;
+    } else {
+        limpiarError(confirmInput);
+        return true;
+    }
+}
+
+function validarFormularioCompleto(event) {
+    // Validar todos los campos
+    const validaciones = [
+        validarNombre(),
+        validarApellido(),
+        validarEmail(),
+        validarTelefono(),
+        validarFechaNacimiento(),
+        validarContraseña(),
+        validarCoincidenciaContraseña()
+    ];
+    
+    // Verificar si todas las validaciones pasaron
+    const esFormularioValido = validaciones.every(validacion => validacion === true);
+    
+    // Validar reCAPTCHA
+    const recaptchaResponse = grecaptcha.getResponse();
+    if (recaptchaResponse.length === 0) {
+        alert("Por favor, complete el reCAPTCHA");
+        event.preventDefault();
+        return false;
+    }
+    
+    // Si algún campo no es válido, prevenir envío
+    if (!esFormularioValido) {
+        event.preventDefault();
+        
+        // Desplazar a primer error
+        const primerError = document.querySelector('.js-error');
+        if (primerError) {
+            primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        alert("Por favor, corrige los errores en el formulario antes de enviar.");
+        return false;
+    }
+    
+    return true;
+}
+
+// Funciones auxiliares
+function mostrarError(input, mensaje) {
+    limpiarError(input);
     
     const errorDiv = document.createElement('div');
-    errorDiv.className = 'field-error';
+    errorDiv.className = 'js-error';
     errorDiv.style.color = 'red';
     errorDiv.style.fontSize = '12px';
     errorDiv.style.marginTop = '5px';
-    errorDiv.textContent = message;
+    errorDiv.textContent = mensaje;
     
     input.parentNode.appendChild(errorDiv);
     input.style.borderColor = 'red';
 }
 
-/**
- * Limpia el error de un campo de entrada
- */
-function clearError(input) {
-    // Eliminar mensajes de error existentes
-    const errorDiv = input.parentNode.querySelector('.field-error');
+function limpiarError(input) {
+    const errorDiv = input.parentNode.querySelector('.js-error');
     if (errorDiv) {
         errorDiv.remove();
     }
     
-    // Restaurar borde
-    input.style.borderColor = '';
+    const serverError = input.parentNode.querySelector('[th\\:if]');
+    if (!serverError || serverError.children.length === 0) {
+        input.style.borderColor = '';
+    }
 }
 
-/**
- * Inicializa la validación del formulario antes de enviar
- */
-function initFormValidation() {
-    const form = document.getElementById('registerForm');
-    if (!form) return;
+function calcularEdad(fechaNacimiento) {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
     
-    form.addEventListener('submit', function(event) {
-        // Validar todos los campos
-        const isNombreValid = validateNombre(document.getElementById('nombre'));
-        const isApellidoValid = validateApellido(document.getElementById('apellido'));
-        const isEmailValid = validateEmail(document.getElementById('email'));
-        const isTelefonoValid = validateTelefono(document.getElementById('telefono'));
-        const isPasswordValid = validatePassword(document.getElementById('contraseña'));
-        const isPasswordMatchValid = validatePasswordMatch();
-        const isFechaValid = validateFechaNacimiento(document.getElementById('fechaNacimiento'));
-        
-        // Validar reCAPTCHA
-        const recaptchaResponse = grecaptcha.getResponse();
-        if (recaptchaResponse.length === 0) {
-            alert("Por favor, complete el reCAPTCHA");
-            event.preventDefault();
-            return false;
-        }
-        
-        // Si algún campo no es válido, prevenir envío
-        if (!isNombreValid || !isApellidoValid || !isEmailValid || 
-            !isTelefonoValid || !isPasswordValid || !isPasswordMatchValid || 
-            !isFechaValid) {
-            event.preventDefault();
-            return false;
-        }
-        
-        return true;
-    });
-}
-
-/**
- * Función para validar la fortaleza de la contraseña (opcional)
- */
-function checkPasswordStrength(password) {
-    let strength = 0;
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+    }
     
-    // Longitud
-    if (password.length >= 8) strength++;
-    if (password.length >= 12) strength++;
-    
-    // Complejidad
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/\d/.test(password)) strength++;
-    if (/[@$!%*?&.#_-]/.test(password)) strength++;
-    
-    return strength;
+    return edad;
 }
