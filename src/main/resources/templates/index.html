@@ -128,11 +128,15 @@
         // Variables globales
         let uploadedImages = [];
         let currentImageIndex = 0;
-        const API_URL = 'http://localhost:8080/api/imagenes';
+        
+        // URL DINÁMICA para Render.com - ESTA ES LA SOLUCIÓN
+        const API_URL = window.location.origin + '/api/imagenes';
+        console.log('API URL configurada:', API_URL);
+        console.log('Dominio actual:', window.location.origin);
         
         // Obtener token CSRF de los meta tags
-        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
         
         // Mostrar/ocultar la sección de imágenes
         function showImageSection() {
@@ -187,18 +191,30 @@
             const formData = new FormData();
             formData.append('imagen', fileInput.files[0]);
             
+            // Para Render.com, prueba sin CSRF primero
+            const headers = {};
+            
+            if (csrfToken && csrfHeader) {
+                headers[csrfHeader] = csrfToken;
+                console.log('Usando CSRF token');
+            } else {
+                console.log('CSRF no disponible, enviando sin headers');
+            }
+            
             try {
                 showMessage('Subiendo imagen...', 'info');
+                console.log('Enviando a:', API_URL + '/subir');
                 
                 const response = await fetch(API_URL + '/subir', {
                     method: 'POST',
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    },
+                    headers: headers,
                     body: formData
                 });
                 
+                console.log('Respuesta recibida, status:', response.status);
+                
                 const result = await response.json();
+                console.log('Resultado:', result);
                 
                 if (result.success) {
                     showMessage('✅ Imagen subida exitosamente', 'success');
@@ -209,22 +225,30 @@
                     showMessage('❌ ' + result.message, 'error');
                 }
             } catch (error) {
-                showMessage('❌ Error de conexión con el servidor', 'error');
-                console.error('Error:', error);
+                console.error('Error completo:', error);
+                showMessage('❌ Error de conexión: ' + error.message, 'error');
             }
         }
         
         // Cargar imágenes desde el servidor
         async function loadUploadedImages() {
+            console.log('Cargando imágenes desde:', API_URL);
+            
             try {
+                const headers = {};
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+                
                 const response = await fetch(API_URL, {
-                    headers: {
-                        [csrfHeader]: csrfToken
-                    }
+                    headers: headers
                 });
+                
+                console.log('Status de carga:', response.status);
                 
                 if (response.ok) {
                     const result = await response.json();
+                    console.log('Imágenes cargadas:', result);
                     
                     if (result.success && result.data && result.data.length > 0) {
                         uploadedImages = result.data;
@@ -234,11 +258,13 @@
                         hideCarousel();
                     }
                 } else {
-                    console.error('Error al cargar imágenes');
+                    console.error('Error al cargar imágenes, status:', response.status);
+                    const errorText = await response.text();
+                    console.error('Error detalle:', errorText);
                     hideCarousel();
                 }
             } catch (error) {
-                console.error('Error de conexión:', error);
+                console.error('Error de conexión al cargar imágenes:', error);
                 hideCarousel();
             }
         }
@@ -270,10 +296,17 @@
             currentImageIndex = index;
             const imagen = uploadedImages[currentImageIndex];
             
+            // IMPORTANTE: Usar URL absoluta para las imágenes
+            const imageUrl = imagen.url.startsWith('http') 
+                ? imagen.url 
+                : window.location.origin + imagen.url;
+            
+            console.log('Mostrando imagen URL:', imageUrl);
+            
             // Crear o actualizar la imagen en el carrusel
             const carouselInner = document.getElementById('carouselInner');
             carouselInner.innerHTML = `
-                <img src="${imagen.url}" 
+                <img src="${imageUrl}" 
                      alt="Imagen ${imagen.id}" 
                      style="max-width: 100%; max-height: 400px;">
                 <p>ID: ${imagen.id} | Subida: ${new Date(imagen.fechaSubida).toLocaleDateString()}</p>
@@ -306,12 +339,17 @@
             }
             
             try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+                
                 const response = await fetch(`${API_URL}/${imagen.id}`, {
                     method: 'DELETE',
-                    headers: {
-                        [csrfHeader]: csrfToken,
-                        'Content-Type': 'application/json'
-                    }
+                    headers: headers
                 });
                 
                 const result = await response.json();
@@ -354,6 +392,12 @@
                 messageDiv.innerHTML = '';
             }, 5000);
         }
+        
+        // Test de conexión al iniciar
+        console.log('=== INICIALIZANDO APLICACIÓN ===');
+        console.log('URL Base:', window.location.origin);
+        console.log('API URL:', API_URL);
+        console.log('CSRF disponible:', !!csrfToken);
         
     </script>
 </body>
