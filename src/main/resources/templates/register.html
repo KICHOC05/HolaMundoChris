@@ -8,8 +8,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Script de reCAPTCHA de Google -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <!-- Nuestro script de validaciones -->
-    <script th:src="@{/js/register-validations.js}" defer></script>
+    <style>
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        .input-error {
+            border-color: #dc3545 !important;
+            background-color: #fff8f8;
+        }
+        .input-success {
+            border-color: #28a745 !important;
+        }
+    </style>
 </head>
 <!-- Breadcrumbs que muestran la ruta actual del HTML -->
 <div style="padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; margin-bottom: 15px; font-size: 14px;">
@@ -25,12 +38,15 @@
         <strong>¡Registro exitoso!</strong> Ya puedes <a th:href="@{/login}">iniciar sesión</a>.
     </div>
     
-    <form th:action="@{/register}" th:object="${registerDto}" method="post" id="registerForm">
+    <form th:action="@{/register}" th:object="${registerDto}" method="post" id="registerForm" novalidate>
         
         <!-- Campo Nombre -->
         <div style="margin-bottom: 15px;">
             <label for="nombre">Nombre:</label><br>
-            <input type="text" id="nombre" th:field="*{nombre}" style="width: 300px; padding: 5px;">
+            <input type="text" id="nombre" th:field="*{nombre}" 
+                   style="width: 300px; padding: 5px;"
+                   oninput="validateNombre(this)">
+            <div id="nombre-error" class="error-message"></div>
             <div th:if="${#fields.hasErrors('nombre')}" style="color: red;">
                 <span th:errors="*{nombre}"></span>
             </div>
@@ -39,7 +55,10 @@
         <!-- Campo Apellido -->
         <div style="margin-bottom: 15px;">
             <label for="apellido">Apellido:</label><br>
-            <input type="text" id="apellido" th:field="*{apellido}" style="width: 300px; padding: 5px;">
+            <input type="text" id="apellido" th:field="*{apellido}" 
+                   style="width: 300px; padding: 5px;"
+                   oninput="validateApellido(this)">
+            <div id="apellido-error" class="error-message"></div>
             <div th:if="${#fields.hasErrors('apellido')}" style="color: red;">
                 <span th:errors="*{apellido}"></span>
             </div>
@@ -48,7 +67,10 @@
         <!-- Campo Email -->
         <div style="margin-bottom: 15px;">
             <label for="email">Email:</label><br>
-            <input type="email" id="email" th:field="*{email}" style="width: 300px; padding: 5px;">
+            <input type="email" id="email" th:field="*{email}" 
+                   style="width: 300px; padding: 5px;"
+                   oninput="validateEmail(this)">
+            <div id="email-error" class="error-message"></div>
             <div th:if="${#fields.hasErrors('email')}" style="color: red;">
                 <span th:errors="*{email}"></span>
             </div>
@@ -57,7 +79,10 @@
         <!-- Campo Teléfono -->
         <div style="margin-bottom: 15px;">
             <label for="telefono">Teléfono:</label><br>
-            <input type="text" id="telefono" th:field="*{telefono}" style="width: 300px; padding: 5px;">
+            <input type="text" id="telefono" th:field="*{telefono}" 
+                   style="width: 300px; padding: 5px;"
+                   oninput="validateTelefono(this)">
+            <div id="telefono-error" class="error-message"></div>
             <div th:if="${#fields.hasErrors('telefono')}" style="color: red;">
                 <span th:errors="*{telefono}"></span>
             </div>
@@ -66,7 +91,10 @@
         <!-- Campo Dirección -->
         <div style="margin-bottom: 15px;">
             <label for="direccion">Dirección:</label><br>
-            <input type="text" id="direccion" th:field="*{direccion}" style="width: 300px; padding: 5px;">
+            <input type="text" id="direccion" th:field="*{direccion}" 
+                   style="width: 300px; padding: 5px;"
+                   oninput="validateDireccion(this)">
+            <div id="direccion-error" class="error-message"></div>
             <div th:if="${#fields.hasErrors('direccion')}" style="color: red;">
                 <span th:errors="*{direccion}"></span>
             </div>
@@ -75,7 +103,10 @@
         <!-- Campo Fecha Nacimiento -->
         <div style="margin-bottom: 15px;">
             <label for="fechaNacimiento">Fecha de Nacimiento:</label><br>
-            <input type="date" id="fechaNacimiento" th:field="*{fechaNacimiento}" style="width: 300px; padding: 5px;">
+            <input type="date" id="fechaNacimiento" th:field="*{fechaNacimiento}" 
+                   style="width: 300px; padding: 5px;"
+                   onchange="validateFechaNacimiento(this)">
+            <div id="fechaNacimiento-error" class="error-message"></div>
             <div th:if="${#fields.hasErrors('fechaNacimiento')}" style="color: red;">
                 <span th:errors="*{fechaNacimiento}"></span>
             </div>
@@ -84,10 +115,14 @@
         <!-- Campo Contraseña con botón de ojo -->
         <div style="margin-bottom: 15px; position: relative; width: 300px;">
             <label for="contraseña">Contraseña:</label><br>
-            <input type="password" id="contraseña" th:field="*{contraseña}" style="width: 100%; padding: 5px; padding-right: 35px; box-sizing: border-box;">
-            <button type="button" class="toggle-password" data-target="contraseña" style="position: absolute; right: 10px; top: 58%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+            <input type="password" id="contraseña" th:field="*{contraseña}" 
+                   style="width: 100%; padding: 5px; padding-right: 35px; box-sizing: border-box;"
+                   oninput="validatePassword(this)">
+            <button type="button" class="toggle-password" data-target="contraseña" 
+                    style="position: absolute; right: 10px; top: 58%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
                 <i class="bi bi-eye"></i>
             </button>
+            <div id="contraseña-error" class="error-message"></div>
             <div th:if="${#fields.hasErrors('contraseña')}" style="color: red;">
                 <span th:errors="*{contraseña}"></span>
             </div>
@@ -96,10 +131,14 @@
         <!-- Campo Confirmar Contraseña con botón de ojo -->
         <div style="margin-bottom: 15px; position: relative; width: 300px;">
             <label for="confirmarContraseña">Confirmar Contraseña:</label><br>
-            <input type="password" id="confirmarContraseña" th:field="*{confirmarContraseña}" style="width: 100%; padding: 5px; padding-right: 35px; box-sizing: border-box;">
-            <button type="button" class="toggle-password" data-target="confirmarContraseña" style="position: absolute; right: 10px; top: 58%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
+            <input type="password" id="confirmarContraseña" th:field="*{confirmarContraseña}" 
+                   style="width: 100%; padding: 5px; padding-right: 35px; box-sizing: border-box;"
+                   oninput="validateConfirmPassword(this)">
+            <button type="button" class="toggle-password" data-target="confirmarContraseña" 
+                    style="position: absolute; right: 10px; top: 58%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666;">
                 <i class="bi bi-eye"></i>
             </button>
+            <div id="confirmarContraseña-error" class="error-message"></div>
             <div th:if="${#fields.hasErrors('confirmarContraseña')}" style="color: red;">
                 <span th:errors="*{confirmarContraseña}"></span>
             </div>
@@ -108,7 +147,7 @@
         <!-- Campo reCAPTCHA v2 -->
         <div style="margin-bottom: 15px;">
             <div class="g-recaptcha" th:attr="data-sitekey=${siteKey}"></div>
-            <!-- Mostrar error de reCAPTCHA usando captchaError -->
+            <div id="recaptcha-error" class="error-message"></div>
             <div th:if="${captchaError != null}" style="color: red;">
                 <span th:text="${captchaError}"></span>
             </div>
@@ -122,7 +161,8 @@
         </div>
         
         <!-- Botón Submit -->
-        <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
+        <button type="button" onclick="validateForm()" 
+                style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
             Registrarse
         </button>
         
@@ -134,5 +174,308 @@
         ¿Ya tienes cuenta? <a th:href="@{/login}">Inicia sesión aquí</a>
     </p>
 
+    <script>
+        // Función para mostrar/ocultar contraseña
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        });
+
+        // Funciones de validación
+        function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // Marcar input como error
+            const inputId = elementId.replace('-error', '');
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.classList.add('input-error');
+                input.classList.remove('input-success');
+            }
+        }
+
+        function hideError(elementId) {
+            const errorElement = document.getElementById(elementId);
+            errorElement.style.display = 'none';
+            
+            // Quitar marca de error y agregar éxito
+            const inputId = elementId.replace('-error', '');
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.classList.remove('input-error');
+                input.classList.add('input-success');
+            }
+        }
+
+        function validateNombre(input) {
+            const value = input.value.trim();
+            if (!value) {
+                showError('nombre-error', 'El nombre es requerido');
+                return false;
+            }
+            if (value.length < 2) {
+                showError('nombre-error', 'El nombre debe tener al menos 2 caracteres');
+                return false;
+            }
+            if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) {
+                showError('nombre-error', 'El nombre solo puede contener letras y espacios');
+                return false;
+            }
+            hideError('nombre-error');
+            return true;
+        }
+
+        function validateApellido(input) {
+            const value = input.value.trim();
+            if (!value) {
+                showError('apellido-error', 'El apellido es requerido');
+                return false;
+            }
+            if (value.length < 2) {
+                showError('apellido-error', 'El apellido debe tener al menos 2 caracteres');
+                return false;
+            }
+            if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) {
+                showError('apellido-error', 'El apellido solo puede contener letras y espacios');
+                return false;
+            }
+            hideError('apellido-error');
+            return true;
+        }
+
+        function validateEmail(input) {
+            const value = input.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!value) {
+                showError('email-error', 'El email es requerido');
+                return false;
+            }
+            if (!emailRegex.test(value)) {
+                showError('email-error', 'Ingresa un email válido');
+                return false;
+            }
+            hideError('email-error');
+            return true;
+        }
+
+        function validateTelefono(input) {
+            const value = input.value.trim();
+            const telefonoRegex = /^[0-9+\-\s()]{7,15}$/;
+            
+            if (!value) {
+                showError('telefono-error', 'El teléfono es requerido');
+                return false;
+            }
+            // Eliminar espacios, guiones y paréntesis para validar solo números
+            const soloNumeros = value.replace(/[\s\-()]/g, '');
+            
+            if (soloNumeros.length < 7 || soloNumeros.length > 15) {
+                showError('telefono-error', 'El teléfono debe tener entre 7 y 15 dígitos');
+                return false;
+            }
+            if (!/^\d+$/.test(soloNumeros)) {
+                showError('telefono-error', 'El teléfono solo puede contener números');
+                return false;
+            }
+            hideError('telefono-error');
+            return true;
+        }
+
+        function validateDireccion(input) {
+            const value = input.value.trim();
+            if (!value) {
+                showError('direccion-error', 'La dirección es requerida');
+                return false;
+            }
+            if (value.length < 5) {
+                showError('direccion-error', 'La dirección debe tener al menos 5 caracteres');
+                return false;
+            }
+            hideError('direccion-error');
+            return true;
+        }
+
+        function validateFechaNacimiento(input) {
+            const value = input.value;
+            if (!value) {
+                showError('fechaNacimiento-error', 'La fecha de nacimiento es requerida');
+                return false;
+            }
+            
+            const fechaNacimiento = new Date(value);
+            const hoy = new Date();
+            
+            // Validar que no sea fecha futura
+            if (fechaNacimiento > hoy) {
+                showError('fechaNacimiento-error', 'La fecha de nacimiento no puede ser futura');
+                return false;
+            }
+            
+            // Validar edad mínima (13 años)
+            const edadMinima = new Date();
+            edadMinima.setFullYear(edadMinima.getFullYear() - 13);
+            
+            if (fechaNacimiento > edadMinima) {
+                showError('fechaNacimiento-error', 'Debes tener al menos 13 años');
+                return false;
+            }
+            
+            // Validar edad máxima (120 años)
+            const edadMaxima = new Date();
+            edadMaxima.setFullYear(edadMaxima.getFullYear() - 120);
+            
+            if (fechaNacimiento < edadMaxima) {
+                showError('fechaNacimiento-error', 'La fecha de nacimiento no es válida');
+                return false;
+            }
+            
+            hideError('fechaNacimiento-error');
+            return true;
+        }
+
+        function validatePassword(input) {
+            const value = input.value;
+            if (!value) {
+                showError('contraseña-error', 'La contraseña es requerida');
+                return false;
+            }
+            
+            // Validar longitud
+            if (value.length < 8) {
+                showError('contraseña-error', 'La contraseña debe tener al menos 8 caracteres');
+                return false;
+            }
+            
+            // Validar complejidad
+            const hasUpperCase = /[A-Z]/.test(value);
+            const hasLowerCase = /[a-z]/.test(value);
+            const hasNumbers = /\d/.test(value);
+            const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+            
+            let errors = [];
+            if (!hasUpperCase) errors.push('una mayúscula');
+            if (!hasLowerCase) errors.push('una minúscula');
+            if (!hasNumbers) errors.push('un número');
+            if (!hasSpecialChar) errors.push('un carácter especial');
+            
+            if (errors.length > 0) {
+                showError('contraseña-error', `La contraseña debe contener al menos: ${errors.join(', ')}`);
+                return false;
+            }
+            
+            hideError('contraseña-error');
+            
+            // Si hay confirmación de contraseña, validar que coincidan
+            const confirmInput = document.getElementById('confirmarContraseña');
+            if (confirmInput && confirmInput.value) {
+                validateConfirmPassword(confirmInput);
+            }
+            
+            return true;
+        }
+
+        function validateConfirmPassword(input) {
+            const value = input.value;
+            const password = document.getElementById('contraseña').value;
+            
+            if (!value) {
+                showError('confirmarContraseña-error', 'Confirma tu contraseña');
+                return false;
+            }
+            
+            if (value !== password) {
+                showError('confirmarContraseña-error', 'Las contraseñas no coinciden');
+                return false;
+            }
+            
+            hideError('confirmarContraseña-error');
+            return true;
+        }
+
+        function validateRecaptcha() {
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                showError('recaptcha-error', 'Por favor, completa el reCAPTCHA');
+                return false;
+            }
+            hideError('recaptcha-error');
+            return true;
+        }
+
+        // Validación del formulario completo
+        function validateForm() {
+            // Validar todos los campos
+            const validations = [
+                validateNombre(document.getElementById('nombre')),
+                validateApellido(document.getElementById('apellido')),
+                validateEmail(document.getElementById('email')),
+                validateTelefono(document.getElementById('telefono')),
+                validateDireccion(document.getElementById('direccion')),
+                validateFechaNacimiento(document.getElementById('fechaNacimiento')),
+                validatePassword(document.getElementById('contraseña')),
+                validateConfirmPassword(document.getElementById('confirmarContraseña')),
+                validateRecaptcha()
+            ];
+            
+            // Si todas las validaciones pasan, enviar el formulario
+            if (validations.every(v => v === true)) {
+                document.getElementById('registerForm').submit();
+            } else {
+                // Desplazar a la primera sección con error
+                const firstError = document.querySelector('.input-error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstError.focus();
+                }
+            }
+        }
+
+        // Validación en tiempo real para campos que requieren formato específico
+        document.getElementById('fechaNacimiento').addEventListener('change', function() {
+            validateFechaNacimiento(this);
+        });
+
+        // Inicializar fecha máxima como hoy
+        document.getElementById('fechaNacimiento').max = new Date().toISOString().split('T')[0];
+
+        // Validar reCAPTCHA cuando el usuario interactúe
+        if (typeof grecaptcha !== 'undefined') {
+            grecaptcha.ready(function() {
+                const recaptchaElement = document.querySelector('.g-recaptcha');
+                if (recaptchaElement) {
+                    // Agregar evento para limpiar error cuando se complete el reCAPTCHA
+                    // Esto se maneja automáticamente por la función validateRecaptcha
+                }
+            });
+        }
+
+        // Validación inicial si hay valores prellenados
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputs = document.querySelectorAll('input[oninput], input[onchange]');
+            inputs.forEach(input => {
+                if (input.value) {
+                    // Disparar evento de validación para campos con valor
+                    if (input.oninput) input.oninput();
+                    if (input.onchange) input.onchange();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
