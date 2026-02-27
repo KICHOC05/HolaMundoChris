@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Editar Usuario</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            margin: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 480px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 9px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        input.invalid {
+            border-color: red;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .error-js {
+            color: red;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .global-error {
+            background: #ffe5e5;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            color: red;
+        }
+
+        .info {
+            font-size: 12px;
+            color: #777;
+            margin-bottom: 15px;
+        }
+
+        .back-link {
+            margin-top: 20px;
+            display: block;
+            text-align: center;
+        }
+    </style>
+</head>
+<div style="padding: 8px; 
+            background-color: #f5f5f5; 
+            border: 1px solid #ddd; 
+            margin-bottom: 15px; 
+            font-size: 14px;">
+
+    <strong>Ubicación:</strong> 
+
+    <a th:href="@{/}" 
+       style="color: #007bff; text-decoration: none;">
+        Inicio
+    </a>
+
+    <span style="color: #666;"> &gt; </span>
+
+    <a th:href="@{/users}" 
+       style="color: #007bff; text-decoration: none;">
+        Crud Usuarios
+    </a>
+
+    <span style="color: #666;"> &gt; </span>
+
+    <span style="color: #666;">
+        Edit
+    </span>
+
+</div>
+<body>
+
+<div class="card">
+
+    <h2>Editar Usuario</h2>
+
+    <form id="editForm"
+          th:action="@{/users/update/{id}(id=${userId})}"
+          th:object="${user}"
+          method="post">
+
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}" />
+
+        <div th:if="${#fields.hasGlobalErrors()}" class="global-error">
+            <p th:each="err : ${#fields.globalErrors()}"
+               th:text="${err}"></p>
+        </div>
+
+        <!-- Nombre -->
+        <input type="text" id="nombre" th:field="*{nombre}" placeholder="Nombre"/>
+        <div class="error-js" id="nombreError"></div>
+
+        <!-- Apellido -->
+        <input type="text" id="apellido" th:field="*{apellido}" placeholder="Apellido"/>
+        <div class="error-js" id="apellidoError"></div>
+
+        <!-- Email -->
+        <input type="email" id="email" th:field="*{email}" placeholder="Correo electrónico"/>
+        <div class="error-js" id="emailError"></div>
+
+        <!-- Teléfono -->
+        <input type="text" id="telefono" th:field="*{telefono}" placeholder="Teléfono"/>
+        <div class="error-js" id="telefonoError"></div>
+
+        <!-- Dirección -->
+        <input type="text" id="direccion" th:field="*{direccion}" placeholder="Dirección"/>
+        <div class="error-js" id="direccionError"></div>
+
+        <!-- Fecha -->
+        <input type="date" id="fechaNacimiento" th:field="*{fechaNacimiento}"/>
+        <div class="error-js" id="fechaError"></div>
+
+        <!-- Rol -->
+        <select th:field="*{rol}">
+            <option th:value="'ROLE_USER'">Usuario</option>
+            <option th:value="'ROLE_ADMIN'">Administrador</option>
+        </select>
+
+        <!-- Contraseña -->
+        <input type="password" id="password"
+               th:field="*{contraseña}"
+               placeholder="Nueva contraseña (opcional)"/>
+        <div class="error-js" id="passwordError"></div>
+
+        <div class="info">
+            Deja vacío si no deseas cambiar la contraseña.
+        </div>
+
+        <button type="submit">Actualizar Usuario</button>
+    </form>
+
+    <a th:href="@{/users}" class="back-link">← Volver</a>
+</div>
+
+<script>
+document.getElementById("editForm").addEventListener("submit", function(e) {
+
+    let valid = true;
+
+    function setError(id, message) {
+        document.getElementById(id).innerText = message;
+        if(message) valid = false;
+    }
+
+    function clearErrors() {
+        document.querySelectorAll(".error-js").forEach(el => el.innerText = "");
+        document.querySelectorAll("input").forEach(el => el.classList.remove("invalid"));
+    }
+
+    clearErrors();
+
+    const nombre = document.getElementById("nombre").value.trim();
+    const apellido = document.getElementById("apellido").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const telefono = document.getElementById("telefono").value.trim();
+    const direccion = document.getElementById("direccion").value.trim();
+    const fecha = document.getElementById("fechaNacimiento").value;
+    const password = document.getElementById("password").value;
+
+    const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúñÑ\s]{2,50}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^[0-9]{7,15}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-]).{8,}$/;
+
+    if(!nameRegex.test(nombre)){
+        setError("nombreError", "Solo letras (2-50 caracteres).");
+    }
+
+    if(!nameRegex.test(apellido)){
+        setError("apellidoError", "Solo letras (2-50 caracteres).");
+    }
+
+    if(!emailRegex.test(email)){
+        setError("emailError", "Correo inválido.");
+    }
+
+    if(telefono && !phoneRegex.test(telefono)){
+        setError("telefonoError", "Solo números (7-15 dígitos).");
+    }
+
+    if(direccion.length > 100){
+        setError("direccionError", "Máximo 100 caracteres.");
+    }
+
+    if(fecha){
+        const birthDate = new Date(fecha);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        if(age < 18){
+            setError("fechaError", "Debe ser mayor de 18 años.");
+        }
+    }
+
+    if(password && !passwordRegex.test(password)){
+        setError("passwordError",
+            "Mínimo 8 caracteres, mayúscula, minúscula, número y especial.");
+    }
+
+    if(!valid){
+        e.preventDefault();
+    }
+
+});
+</script>
+
+</body>
+</html>

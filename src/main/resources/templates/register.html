@@ -4,140 +4,215 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Usuario</title>
-    <!-- Script de reCAPTCHA de Google -->
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- reCAPTCHA -->
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <!-- Tu archivo JavaScript de validaciones -->
+
+    <!-- Tu JS -->
     <script th:src="@{/js/register-validations.js}" defer></script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(42, 82, 152, 0.25);
+            border-color: #2a5298;
+        }
+
+        .btn-success {
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .navbar {
+            background: rgba(0,0,0,0.8) !important;
+        }
+
+        .breadcrumb {
+            background: transparent;
+        }
+
+        .card-title {
+            font-weight: 600;
+            color: #2a5298;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
 
-<!-- Breadcrumbs que muestran la ruta actual del HTML -->
-<div style="padding: 8px; background-color: #f5f5f5; border: 1px solid #ddd; margin-bottom: 15px; font-size: 14px;">
-    <strong>Ubicación:</strong> 
-    <a href="/" style="color: #007bff; text-decoration: none;">Inicio</a>
-    <span style="color: #666;"> &gt; </span>
-    <span style="color: #666;">Registro de Usuario</span>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-dark shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/}">Hola Mundo</a>
+        <a th:href="@{/login}" class="btn btn-outline-light">Login</a>
+    </div>
+</nav>
+
+<div class="container mt-5">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb text-white">
+            <li class="breadcrumb-item">
+                <a th:href="@{/}" class="text-white">Inicio</a>
+            </li>
+            <li class="breadcrumb-item active text-light">Registro</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow-lg">
+                <div class="card-body">
+
+                    <h3 class="text-center mb-4 card-title">Crear Cuenta</h3>
+
+                    <!-- Mensaje éxito -->
+                    <div th:if="${success}" class="alert alert-success">
+                        ¡Registro exitoso!
+                        <a th:href="@{/login}" class="alert-link">Iniciar sesión</a>
+                    </div>
+
+                    <form th:action="@{/register}" 
+                          th:object="${registerDto}" 
+                          method="post" 
+                          id="registerForm">
+
+                        <!-- Nombre -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre</label>
+                            <input type="text" th:field="*{nombre}" class="form-control">
+                            <div class="text-danger small" th:errors="*{nombre}"></div>
+                        </div>
+
+                        <!-- Apellido -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Apellido</label>
+                            <input type="text" th:field="*{apellido}" class="form-control">
+                            <div class="text-danger small" th:errors="*{apellido}"></div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Correo electrónico</label>
+                            <input type="email" th:field="*{email}" class="form-control">
+                            <div class="text-danger small" th:errors="*{email}"></div>
+                        </div>
+
+                        <!-- Teléfono -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Teléfono (opcional)</label>
+                            <input type="text" th:field="*{telefono}" class="form-control"
+                                   placeholder="Solo números 7-20 dígitos">
+                            <div class="text-danger small" th:errors="*{telefono}"></div>
+                        </div>
+
+                        <!-- Dirección -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Dirección (opcional)</label>
+                            <input type="text" th:field="*{direccion}" class="form-control">
+                            <div class="text-danger small" th:errors="*{direccion}"></div>
+                        </div>
+
+                        <!-- Fecha -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Fecha de Nacimiento</label>
+                            <input type="date" th:field="*{fechaNacimiento}" class="form-control">
+                            <div class="form-text">
+                                Edad permitida: 13 a 113 años
+                            </div>
+                            <div class="text-danger small" th:errors="*{fechaNacimiento}"></div>
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Contraseña</label>
+                            <input type="password" th:field="*{contraseña}" class="form-control">
+                            <div class="text-danger small" th:errors="*{contraseña}"></div>
+
+                            <div class="form-text">
+                                • 8+ caracteres <br>
+                                • 1 mayúscula <br>
+                                • 1 minúscula <br>
+                                • 1 número <br>
+                                • 1 carácter especial (@$!%*?&.#_-)
+                            </div>
+                        </div>
+
+                        <!-- Confirmar contraseña -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Confirmar Contraseña</label>
+                            <input type="password" th:field="*{confirmarContraseña}" class="form-control">
+                            <div class="text-danger small" th:errors="*{confirmarContraseña}"></div>
+                        </div>
+
+                        <!-- reCAPTCHA -->
+                        <div class="mb-3 text-center">
+                            <div class="g-recaptcha" th:attr="data-sitekey=${siteKey}"></div>
+                            <div class="text-danger small mt-2" th:if="${captchaError != null}"
+                                 th:text="${captchaError}"></div>
+                        </div>
+
+                        <!-- Errores globales -->
+                        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+                            <div th:each="err : ${#fields.globalErrors()}"
+                                 th:text="${err}"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 py-2">
+                            Registrarse
+                        </button>
+
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <span class="text-muted">¿Ya tienes cuenta?</span>
+                        <a th:href="@{/login}" class="fw-semibold text-decoration-none">Inicia sesión</a>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
 
-<body>
-    <h1>Registro de Usuario</h1>
-    
-    <!-- Mostrar mensaje de éxito -->
-    <div th:if="${success}" style="color: green; padding: 10px; border: 1px solid green; margin: 10px 0;">
-        <strong>¡Registro exitoso!</strong> Ya puedes <a th:href="@{/login}">iniciar sesión</a>.
-    </div>
-    
-    <form th:action="@{/register}" th:object="${registerDto}" method="post" id="registerForm">
-        
-        <!-- Campo Nombre -->
-        <div style="margin-bottom: 15px;">
-            <label for="nombre">Nombre:</label><br>
-            <input type="text" id="nombre" th:field="*{nombre}" style="width: 300px; padding: 5px;">
-            <div th:if="${#fields.hasErrors('nombre')}" style="color: red;">
-                <span th:errors="*{nombre}"></span>
-            </div>
-        </div>
-        
-        <!-- Campo Apellido -->
-        <div style="margin-bottom: 15px;">
-            <label for="apellido">Apellido:</label><br>
-            <input type="text" id="apellido" th:field="*{apellido}" style="width: 300px; padding: 5px;">
-            <div th:if="${#fields.hasErrors('apellido')}" style="color: red;">
-                <span th:errors="*{apellido}"></span>
-            </div>
-        </div>
-        
-        <!-- Campo Email -->
-        <div style="margin-bottom: 15px;">
-            <label for="email">Email:</label><br>
-            <input type="email" id="email" th:field="*{email}" style="width: 300px; padding: 5px;">
-            <div th:if="${#fields.hasErrors('email')}" style="color: red;">
-                <span th:errors="*{email}"></span>
-            </div>
-        </div>
-        
-        <!-- Campo Teléfono -->
-        <div style="margin-bottom: 15px;">
-            <label for="telefono">Teléfono (opcional):</label><br>
-            <input type="text" id="telefono" th:field="*{telefono}" placeholder="Solo números, 7-20 dígitos" style="width: 300px; padding: 5px;">
-            <div th:if="${#fields.hasErrors('telefono')}" style="color: red;">
-                <span th:errors="*{telefono}"></span>
-            </div>
-        </div>
-        
-        <!-- Campo Dirección -->
-        <div style="margin-bottom: 15px;">
-            <label for="direccion">Dirección (opcional):</label><br>
-            <input type="text" id="direccion" th:field="*{direccion}" style="width: 300px; padding: 5px;">
-            <div th:if="${#fields.hasErrors('direccion')}" style="color: red;">
-                <span th:errors="*{direccion}"></span>
-            </div>
-        </div>
-        
-        <!-- Campo Fecha Nacimiento -->
-        <div style="margin-bottom: 15px;">
-            <label for="fechaNacimiento">Fecha de Nacimiento:</label><br>
-            <input type="date" id="fechaNacimiento" th:field="*{fechaNacimiento}" style="width: 300px; padding: 5px;">
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                <strong>Edad permitida:</strong> 13 a 113 años
-            </div>
-            <div th:if="${#fields.hasErrors('fechaNacimiento')}" style="color: red;">
-                <span th:errors="*{fechaNacimiento}"></span>
-            </div>
-        </div>
-        
-        <!-- Campo Contraseña -->
-        <div style="margin-bottom: 15px;">
-            <label for="contraseña">Contraseña:</label><br>
-            <input type="password" id="contraseña" th:field="*{contraseña}" style="width: 300px; padding: 5px;">
-            <div th:if="${#fields.hasErrors('contraseña')}" style="color: red;">
-                <span th:errors="*{contraseña}"></span>
-            </div>
-            <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                <strong>Requisitos de contraseña:</strong><br>
-                • Al menos 8 caracteres<br>
-                • Al menos una letra mayúscula (A-Z)<br>
-                • Al menos una letra minúscula (a-z)<br>
-                • Al menos un número (0-9)<br>
-                • Al menos un carácter especial (@$!%*?&.#_-)
-            </div>
-        </div>
-        
-        <!-- Campo Confirmar Contraseña -->
-        <div style="margin-bottom: 15px;">
-            <label for="confirmarContraseña">Confirmar Contraseña:</label><br>
-            <input type="password" id="confirmarContraseña" th:field="*{confirmarContraseña}" style="width: 300px; padding: 5px;">
-            <div th:if="${#fields.hasErrors('confirmarContraseña')}" style="color: red;">
-                <span th:errors="*{confirmarContraseña}"></span>
-            </div>
-        </div>
-        
-        <!-- Campo reCAPTCHA v2 -->
-        <div style="margin-bottom: 15px;">
-            <div class="g-recaptcha" th:attr="data-sitekey=${siteKey}"></div>
-            <!-- Mostrar error de reCAPTCHA usando captchaError -->
-            <div th:if="${captchaError != null}" style="color: red;">
-                <span th:text="${captchaError}"></span>
-            </div>
-        </div>
-        
-        <!-- Errores globales (como contraseñas no coinciden) -->
-        <div th:if="${#fields.hasGlobalErrors()}" style="color: red; margin-bottom: 15px;">
-            <div th:each="err : ${#fields.globalErrors()}">
-                <span th:text="${err}"></span>
-            </div>
-        </div>
-        
-        <!-- Botón Submit -->
-        <button type="submit" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer;">
-            Registrarse
-        </button>
-        
-    </form>
-    
-    <br>
-    
-    <p>
-        ¿Ya tienes cuenta? <a th:href="@{/login}">Inicia sesión aquí</a>
-    </p>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

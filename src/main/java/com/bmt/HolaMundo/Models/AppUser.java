@@ -12,18 +12,16 @@ public class AppUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    // ✅ Solo letras y espacios
     @NotBlank(message = "Nombre es obligatorio")
-    @Size(max = 50, message = "Máximo 50 caracteres")
+    @Size(max = 50)
     @Pattern(
         regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$",
         message = "El nombre no puede contener números ni caracteres especiales"
     )
     private String nombre;
 
-    // ✅ Solo letras y espacios
     @NotBlank(message = "Apellido es obligatorio")
-    @Size(max = 50, message = "Máximo 50 caracteres")
+    @Size(max = 50)
     @Pattern(
         regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$",
         message = "El apellido no puede contener números ni caracteres especiales"
@@ -35,28 +33,27 @@ public class AppUser {
     @Column(unique = true, nullable = false)
     private String email;
 
-    // ✅ Solo números (opcional - nullable true por defecto)
     @Pattern(
         regexp = "^$|^[0-9]{7,20}$",
-        message = "El teléfono solo debe contener números (7 a 20 dígitos) o estar vacío"
+        message = "El teléfono solo debe contener números o estar vacío"
     )
     private String telefono;
 
-    @Size(max = 100, message = "Máximo 100 caracteres")
+    @Size(max = 100)
     private String direccion;
 
-    // 🔐 Contraseña - SIN @Pattern aquí (solo validaciones básicas)
     @NotBlank(message = "Contraseña es obligatoria")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
-    // SE ELIMINA @Pattern de aquí
     private String contraseña;
 
-    @NotBlank(message = "El rol es obligatorio")
-    private String rol;
+    // 🔐 Rol como ENUM
+    @NotNull(message = "El rol es obligatorio")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Role rol;
 
-    // 📅 Fecha de nacimiento
     @NotNull(message = "La fecha de nacimiento es obligatoria")
-    @Past(message = "La fecha de nacimiento debe ser en el pasado")
+    @Past(message = "La fecha debe ser en el pasado")
     @Temporal(TemporalType.DATE)
     private Date fechaNacimiento;
 
@@ -127,11 +124,11 @@ public class AppUser {
         this.contraseña = contraseña;
     }
 
-    public String getRol() {
+    public Role getRol() {
         return rol;
     }
 
-    public void setRol(String rol) {
+    public void setRol(Role rol) {
         this.rol = rol;
     }
 
