@@ -20,40 +20,14 @@ public class SecurityConfig {
 
         http
             // =====================================================
-            // 🔐 AUTORIZACIÓN
+            // 🔓 TODO PERMITIDO
             // =====================================================
             .authorizeHttpRequests(auth -> auth
-
-                // 🌍 Rutas públicas generales
-                .requestMatchers(
-                        "/",
-                        "/login",
-                        "/register",
-                        "/error/**",
-                        "/css/**",
-                        "/js/**",
-                        "/images/**",
-                        "/h2-console/**"
-                ).permitAll()
-
-                // 🌍 LISTADO PÚBLICO DE USUARIOS
-                .requestMatchers("/users", "/users/search").permitAll()
-
-                // 🔐 CRUD protegido solo ADMIN
-                .requestMatchers(
-                        "/users/create",
-                        "/users/save",
-                        "/users/edit/**",
-                        "/users/update/**",
-                        "/users/delete/**"
-                ).hasRole("ADMIN")
-
-                // 🔐 Cualquier otra requiere autenticación
-                .anyRequest().authenticated()
+                    .anyRequest().permitAll()
             )
 
             // =====================================================
-            // 🔑 LOGIN PERSONALIZADO
+            // 🔑 LOGIN (opcional, pero ya no obligatorio)
             // =====================================================
             .formLogin(form -> form
                     .loginPage("/login")
@@ -65,12 +39,12 @@ public class SecurityConfig {
             // 🚪 LOGOUT
             // =====================================================
             .logout(logout -> logout
-                    .logoutSuccessUrl("/login?logout")
+                    .logoutSuccessUrl("/")
                     .permitAll()
             )
 
             // =====================================================
-            // 🛡 CSRF
+            // 🛡 CSRF ACTIVO (recomendado mantenerlo)
             // =====================================================
             .csrf(csrf -> csrf
                     .csrfTokenRepository(
@@ -89,7 +63,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 🔐 Password Encoder
+    // 🔐 Password Encoder (lo dejamos porque tu proyecto lo usa)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
